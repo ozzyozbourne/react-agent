@@ -5,6 +5,7 @@ load_dotenv()
 from langchain_core.messages import BaseMessage, HumanMessage
 from langgraph.graph import END, StateGraph
 from chains import generate_chain, reflect_chain
+import fire
 
 REFLECT = "reflect"
 GENERATE = "generate"
@@ -13,19 +14,19 @@ class GraphState(TypedDict):
     messages: List[BaseMessage]
 
 def generation_node(state: GraphState) -> GraphState:
-    """Generate a new tweet based on the current messages."""
+    """Generate security analysis based on the current messages."""
     messages = state["messages"]
     response = generate_chain.invoke({"messages": messages})
     return {"messages": messages + [response]}
 
 def reflection_node(state: GraphState) -> GraphState:
-    """Generate critique and reflection on the current messages."""
+    """Generate deeper security critique and additional findings."""
     messages = state["messages"]
     reflection = reflect_chain.invoke({"messages": messages})
     return {"messages": messages + [reflection]}
 
 def should_continue(state: GraphState) -> str:
-    """Determine whether to continue or end the conversation."""
+    """Determine whether to continue or end the analysis."""
     messages = state["messages"]
     if len(messages) > 6: return END
     return REFLECT
@@ -46,32 +47,42 @@ builder.add_conditional_edges(
 builder.add_edge(REFLECT, GENERATE)
 graph = builder.compile()
 
-# print("Graph Structure:")
-# print(graph.get_graph().draw_mermaid())
-# print("\nASCII Graph:")
-# graph.get_graph().print_ascii()
+print("Graph Structure:")
+print(graph.get_graph().draw_mermaid())
+print("\nASCII Graph:")
+graph.get_graph().print_ascii()
 
-def printOut(response):
-    print("\n" + "="*50)
-    print("CONVERSATION FLOW:")
-    print("="*50)
+def printSecurityReport(response):
+    print("\n" + "="*70)
+    print("🔒 SECURITY ANALYSIS REPORT")
+    print("="*70)
 
-    # Print all messages in the conversation
+    analysis_round = 0
     for i, message in enumerate(response["messages"]):
         role = message.__class__.__name__
         content = message.content
-        print(f"\n{i+1}. {role}:")
-        print("-" * 30)
-        print(content)
+
+        if role == "HumanMessage":
+            print("\n📋 CODE ANALYZED:")
+            print("-" * 50)
+            preview = content.split("Analyze this code for security vulnerabilities:\n", 1)[-1][:300]
+            print(preview + "..." if len(content) > 300 else preview)
+        else:
+            if i % 2 == 1:
+                analysis_round += 1
+                print(f"\n🔍 ANALYSIS ROUND {analysis_round}:")
+            else:
+                print(f"\n🎯 REFLECTION {analysis_round}:")
+            print("-" * 50)
+            print(content)
 
 
-if __name__ == "__main__":
-    initial_message = HumanMessage(content="""Make this tweet better:
-@LangChainAI
-— newly Tool Calling feature is seriously underrated.
-After a long wait, it's here- making the implementation of agents across different models with function calling - super easy.
-Made a video covering their newest blog post""")
+def analyze(code):
+    """Analyze code for security vulnerabilities."""
+    initial_message = HumanMessage(
+        content=f"Analyze this code for security vulnerabilities:\n{code}"
+    )
+    response = graph.invoke({"messages": [initial_message]})
+    printSecurityReport(response)
 
-    inputs: GraphState = {"messages": [initial_message]}
-    response = graph.invoke(inputs)
-    printOut(response)
+if __name__ == "__main__": fire.Fire(analyze)
