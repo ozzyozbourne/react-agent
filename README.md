@@ -23,23 +23,21 @@ The agent uses a state machine pattern with LangGraph:
 *Graph visualization showing the Generate → Reflect cycle*
 
 ```
-┌─────────┐
-│  START  │
-└────┬────┘
-     │
-     ▼
-┌──────────┐
-│ GENERATE │ ← Produces initial output
-└────┬─────┘
-     │
-     ├─────→ END (if iteration limit reached)
-     │
-     ▼
-┌──────────┐
-│ REFLECT  │ ← Critiques and suggests improvements
-└────┬─────┘
-     │
-     └─────→ GENERATE (loop continues)
+          +-----------+
+          | __start__ |
+          +-----------+
+                *
+                *
+                *
+          +----------+
+          | generate |
+          +----------+
+          ...        ***
+         .              *
+       ..                **
++---------+           +---------+
+| __end__ |           | reflect |
++---------+           +---------+
 ```
 
 ### How It Works
