@@ -20,25 +20,6 @@ Simply change the system prompts to adapt the agent for your specific use case!
 The agent uses a state machine pattern with LangGraph:
 
 ![LangGraph Flow Diagram](langgraph-flow.png)
-*Graph visualization showing the Generate → Reflect cycle*
-
-```
-          +-----------+
-          | __start__ |
-          +-----------+
-                *
-                *
-                *
-          +----------+
-          | generate |
-          +----------+
-          ...        ***
-         .              *
-       ..                **
-+---------+           +---------+
-| __end__ |           | reflect |
-+---------+           +---------+
-```
 
 ### How It Works
 
