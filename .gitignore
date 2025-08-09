@@ -1,0 +1,7 @@
+.env
+.idea
+.ropeproject
+.venv
+__pycache__
+poetry.lock
+uv.lock
